@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#B8860B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zlatna ptica">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KPHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIHJ4PSIzNiIgZmlsbD0iI0ZGRTlCOCIvPgo8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDUiIHI9IjU1IiBmaWxsPSIjRkZENzAwIi8+CjxlbGxpcHNlIGN4PSI4OCIgY3k9IjExMiIgcng9IjI4IiByeT0iMjAiIGZpbGw9IiNGRkE1MDAiLz4KPHBhdGggZD0iTTE1MCA5NSBMMTc4IDEwNSBMMTUwIDExOCBaIiBmaWxsPSIjRkY2NDAwIi8+CjxjaXJjbGUgY3g9IjEyOCIgY3k9Ijg4IiByPSI2IiBmaWxsPSIjMDAwIi8+Cjwvc3ZnPgo=">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KPHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIHJ4PSIzNiIgZmlsbD0iI0ZGRTlCOCIvPgo8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDUiIHI9IjU1IiBmaWxsPSIjRkZENzAwIi8+CjxlbGxpcHNlIGN4PSI4OCIgY3k9IjExMiIgcng9IjI4IiByeT0iMjAiIGZpbGw9IiNGRkE1MDAiLz4KPHBhdGggZD0iTTE1MCA5NSBMMTc4IDEwNSBMMTUwIDExOCBaIiBmaWxsPSIjRkY2NDAwIi8+CjxjaXJjbGUgY3g9IjEyOCIgY3k9Ijg4IiByPSI2IiBmaWxsPSIjMDAwIi8+Cjwvc3ZnPgo=">
+<link rel="manifest" id="manifestLink">
+<title>Golden Bird</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #FFF6E0 0%, #FFE9B8 100%);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: #4A3B22;
+  }
+  h1 {
+    margin: 10px 0 4px;
+    font-size: 32px;
+    letter-spacing: 1px;
+    color: #B8860B;
+    text-shadow: 1px 1px 0 #fff8e8;
+    position: absolute;
+    top: 0;
+    z-index: 2;
+  }
+  .subtitle {
+    display: none;
+  }
+  #wrap {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    background: linear-gradient(180deg, #87CEEB 0%, #C9E9FA 100%);
+    width: 100%;
+    height: 100%;
+  }
+  #hud {
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #4A3B22;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    z-index: 3;
+  }
+  #livesHud {
+    position: absolute;
+    top: 46px;
+    left: 14px;
+    font-size: 17px;
+    font-weight: bold;
+    color: #B03A2E;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    z-index: 3;
+    transition: transform 0.15s ease;
+  }
+  #livesHud.flash { transform: scale(1.25); }
+  #overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(40, 25, 5, 0.55);
+    color: #FFF6E0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  #overlay h2 { font-size: 30px; margin: 0 0 6px; color: #FFD700; }
+  #overlay p { margin: 4px 0; font-size: 16px; }
+  #overlay button {
+    margin-top: 14px;
+    padding: 10px 22px;
+    font-size: 16px;
+    font-family: inherit;
+    background: #FFD700;
+    color: #4A3B22;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  #overlay button:hover { background: #ffdf33; }
+  .hint {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 13px;
+    color: #4A3B22;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    z-index: 3;
+    pointer-events: none;
+  }
+  #touchControls {
+    display: none;
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 18px;
+    justify-content: space-between;
+    align-items: flex-end;
+    z-index: 4;
+  }
+  #touchControls.active { display: flex; }
+  .moveBtns { display: flex; gap: 14px; }
+  .touchBtn {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: rgba(184, 134, 11, 0.35);
+    border: 2px solid rgba(255, 246, 224, 0.7);
+    color: #FFF6E0;
+    font-size: 26px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+  .touchBtn:active, .touchBtn.pressed { background: rgba(184, 134, 11, 0.65); }
+  #btnJump { width: 74px; height: 74px; font-size: 30px; }
+
+  #installBtn {
+    display: none;
+    position: absolute;
+    top: 58px;
+    right: 14px;
+    z-index: 5;
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: bold;
+    color: #4A3B22;
+    background: #FFD700;
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    cursor: pointer;
+  }
+  #installBtn.show { display: block; }
+  #soundBtn {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    z-index: 5;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    font-size: 18px;
+    color: #4A3B22;
+    background: #FFD700;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    cursor: pointer;
+  }
+  #iosHint {
+    display: none;
+    position: absolute;
+    bottom: 46px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(40, 25, 5, 0.85);
+    color: #FFF6E0;
+    font-size: 12px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    z-index: 5;
+    text-align: center;
+    max-width: 90%;
+  }
+  #iosHint.show { display: block; }
+
+  /* Ova verzija je isključivo za telefone — kompaktne dimenzije su podrazumevane, ne samo na uskim ekranima */
+    #hud { font-size: 20px; top: 8px; left: 10px; }
+    #livesHud { font-size: 14px; top: 34px; left: 10px; }
+    .hint { font-size: 11px; bottom: 6px; }
+    .touchBtn { width: 54px; height: 54px; font-size: 22px; }
+    #btnJump { width: 66px; height: 66px; font-size: 26px; }
+    #touchControls { padding: 12px; }
+    #soundBtn { width: 32px; height: 32px; font-size: 15px; top: 8px; right: 10px; }
+    #installBtn { top: 48px; }
+</style>
+</head>
+<body>
+
+<div id="wrap">
+  <canvas id="game"></canvas>
+  <div id="hud">Score: 0</div>
+  <div id="livesHud">❤️ Lives: 10</div>
+  <button id="installBtn">📲 Install App</button>
+  <button id="soundBtn">🔊</button>
+  <div class="hint">🐦 Golden Bird &nbsp;•&nbsp; tap the buttons to move and jump &nbsp;•&nbsp; 🔊 top right for sound</div>
+  <div id="iosHint">Tap Share 🔗 then "Add to Home Screen" to install the game</div>
+  <div id="touchControls">
+    <div class="moveBtns">
+      <div class="touchBtn" id="btnLeft">◀</div>
+      <div class="touchBtn" id="btnRight">▶</div>
+    </div>
+    <div class="touchBtn" id="btnJump">▲</div>
+  </div>
+  <div id="overlay">
+    <h2>GAME OVER</h2>
+    <p id="finalScore"></p>
+    <button id="restartBtn">Play Again</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+// --- Učini je aplikacijom (PWA): manifest, instalacija, ikonica ---
+(function setupApp() {
+  const iconDataUri = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KPHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIHJ4PSIzNiIgZmlsbD0iI0ZGRTlCOCIvPgo8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDUiIHI9IjU1IiBmaWxsPSIjRkZENzAwIi8+CjxlbGxpcHNlIGN4PSI4OCIgY3k9IjExMiIgcng9IjI4IiByeT0iMjAiIGZpbGw9IiNGRkE1MDAiLz4KPHBhdGggZD0iTTE1MCA5NSBMMTc4IDEwNSBMMTUwIDExOCBaIiBmaWxsPSIjRkY2NDAwIi8+CjxjaXJjbGUgY3g9IjEyOCIgY3k9Ijg4IiByPSI2IiBmaWxsPSIjMDAwIi8+Cjwvc3ZnPgo=';
+  const manifest = {
+    name: 'Golden Bird',
+    short_name: 'Golden Bird',
+    start_url: location.href.split('#')[0],
+    scope: location.href.split('#')[0],
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#FFE9B8',
+    theme_color: '#B8860B',
+    icons: [
+      { src: iconDataUri, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+      { src: iconDataUri, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+  document.getElementById('manifestLink').setAttribute('href', URL.createObjectURL(blob));
+
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const installBtn = document.getElementById('installBtn');
+  let deferredPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!isStandalone) installBtn.classList.add('show');
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    installBtn.classList.remove('show');
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installBtn.classList.remove('show');
+  });
+
+  // iOS Safari nema beforeinstallprompt — pokaži uputstvo umesto dugmeta
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (isIOS && !isStandalone) {
+    const iosHint = document.getElementById('iosHint');
+    iosHint.classList.add('show');
+    setTimeout(() => iosHint.classList.remove('show'), 6000);
+  }
+})();
+
+function resizeCanvas() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resizeCanvas();
+
+// ============ ZVUK: sintetizovani zvučni efekti i muzika (bez spoljnih fajlova) ============
+const Audio_ = (function() {
+  let ctx = null;
+  let masterGain = null;
+  let musicGain = null;
+  let sfxGain = null;
+  let musicTimer = null;
+  let musicStep = 0;
+  let enabled = true;
+
+  try {
+    const saved = localStorage.getItem('zp_sound_enabled');
+    if (saved !== null) enabled = saved === '1';
+  } catch (e) { /* ignoriši ako localStorage nije dostupan */ }
+
+  function ensureCtx() {
+    if (ctx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ctx = new AC();
+    masterGain = ctx.createGain();
+    masterGain.gain.value = enabled ? 1 : 0;
+    masterGain.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 0.18;
+    musicGain.connect(masterGain);
+    sfxGain = ctx.createGain();
+    sfxGain.gain.value = 0.35;
+    sfxGain.connect(masterGain);
+  }
+
+  function tone(gainNode, freq, duration, type, startOffset, peakVol) {
+    if (!ctx) return;
+    const t0 = ctx.currentTime + (startOffset || 0);
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(peakVol != null ? peakVol : 1, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+    osc.connect(g);
+    g.connect(gainNode);
+    osc.start(t0);
+    osc.stop(t0 + duration + 0.02);
+  }
+
+  function sfxJump() {
+    if (!ctx) return;
+    tone(sfxGain, 520, 0.12, 'triangle', 0, 0.9);
+    tone(sfxGain, 780, 0.1, 'triangle', 0.03, 0.5);
+  }
+  function sfxLand() {
+    if (!ctx) return;
+    tone(sfxGain, 180, 0.09, 'sine', 0, 0.6);
+  }
+  function sfxHit() {
+    if (!ctx) return;
+    tone(sfxGain, 220, 0.28, 'sawtooth', 0, 0.8);
+    tone(sfxGain, 140, 0.32, 'square', 0.05, 0.6);
+    tone(sfxGain, 90, 0.4, 'sawtooth', 0.1, 0.5);
+  }
+  function sfxZap() {
+    if (!ctx) return;
+    tone(sfxGain, 1200, 0.05, 'square', 0, 0.5);
+    tone(sfxGain, 900, 0.06, 'square', 0.04, 0.45);
+    tone(sfxGain, 600, 0.08, 'sawtooth', 0.08, 0.4);
+  }
+  function sfxHeal() {
+    if (!ctx) return;
+    tone(sfxGain, 523.25, 0.12, 'sine', 0, 0.5);
+    tone(sfxGain, 659.25, 0.12, 'sine', 0.08, 0.5);
+    tone(sfxGain, 783.99, 0.18, 'sine', 0.16, 0.55);
+  }
+  function sfxRestart() {
+    if (!ctx) return;
+    tone(sfxGain, 440, 0.08, 'triangle', 0, 0.6);
+    tone(sfxGain, 660, 0.1, 'triangle', 0.08, 0.6);
+    tone(sfxGain, 880, 0.14, 'triangle', 0.16, 0.6);
+  }
+
+  // Vesela kratka melodija u petlji (pentatonika), svira tiho u pozadini
+  const MELODY = [
+    523.25, 659.25, 783.99, 659.25, 587.33, 783.99, 659.25, 523.25,
+    493.88, 587.33, 659.25, 587.33, 523.25, 392.00, 440.00, 523.25
+  ];
+  const STEP_DUR = 0.28;
+
+  function scheduleMusic() {
+    if (!ctx || !musicGain) return;
+    const freq = MELODY[musicStep % MELODY.length];
+    tone(musicGain, freq, STEP_DUR * 0.9, 'sine', 0, 0.5);
+    tone(musicGain, freq / 2, STEP_DUR * 0.9, 'triangle', 0, 0.25);
+    musicStep++;
+  }
+
+  function startMusic() {
+    if (musicTimer) return;
+    ensureCtx();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    scheduleMusic();
+    musicTimer = setInterval(scheduleMusic, STEP_DUR * 1000);
+  }
+  function stopMusic() {
+    if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+  }
+
+  function setEnabled(v) {
+    enabled = v;
+    if (masterGain) masterGain.gain.value = enabled ? 1 : 0;
+    try { localStorage.setItem('zp_sound_enabled', enabled ? '1' : '0'); } catch (e) {}
+  }
+  function isEnabled() { return enabled; }
+
+  function unlock() {
+    ensureCtx();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+    startMusic();
+  }
+
+  return { unlock, sfxJump, sfxLand, sfxHit, sfxZap, sfxHeal, sfxRestart, setEnabled, isEnabled, stopMusic, startMusic };
+})();
+
+const soundBtn = document.getElementById('soundBtn');
+function refreshSoundBtn() { soundBtn.textContent = Audio_.isEnabled() ? '🔊' : '🔇'; }
+refreshSoundBtn();
+soundBtn.addEventListener('click', () => {
+  Audio_.unlock();
+  Audio_.setEnabled(!Audio_.isEnabled());
+  refreshSoundBtn();
+});
+// Prvi dodir/pritisak bilo gde pokreće zvuk (politika brauzera zahteva gest korisnika)
+['keydown', 'touchstart', 'mousedown'].forEach(evt => {
+  window.addEventListener(evt, () => Audio_.unlock(), { once: true, passive: true });
+});
+
+const GRAVITY = 0.45;
+const JUMP_STRENGTH = -12;
+const PLAYER_SPEED = 6;
+const CLOUD_W = 110, CLOUD_H = 20;
+const NUM_CLOUDS = 16;
+
+// --- Leteća burad (prepreke) — pojavljuju se posle 1000 poena ---
+const BARREL_W = 46, BARREL_H = 34;
+const BARREL_SCORE_START = 1000;   // burad počinju da lete tek posle ovoliko poena
+const BARREL_MIN_SPEED = 1.8, BARREL_MAX_SPEED = 3.6;
+// Tačan broj bureta u svakom od ovih opsega poena
+const BARREL_ZONES = [
+  { min: 1000, max: 1500, count: 1 },
+  { min: 1500, max: 1700, count: 1 },
+  { min: 1700, max: 2000, count: 1 },
+  { min: 2000, max: 2500, count: 1 },
+  { min: 2500, max: 3000, count: 1 },
+  { min: 3000, max: 3300, count: 2 },
+  { min: 3300, max: 3600, count: 2 },
+  { min: 3600, max: 3800, count: 2 },
+  { min: 3800, max: 4000, count: 2 }
+];
+// Od 4000 do 10000: po 2 bureta na svakih 200 poena
+for (let s = 4000; s < 10000; s += 200) {
+  BARREL_ZONES.push({ min: s, max: s + 200, count: 2 });
+}
+// Razvuci tačan broj bureta ravnomerno kroz svaki opseg
+let barrelThresholds = [];
+for (const z of BARREL_ZONES) {
+  for (let i = 0; i < z.count; i++) {
+    barrelThresholds.push(z.min + i * (z.max - z.min) / z.count);
+  }
+}
+
+// --- Životi ---
+const MAX_LIVES = 10;
+
+// --- Munjeviti oblaci (opasne platforme) — koštaju 2 života kad sletiš na njih ---
+const LIGHTNING_ZONES = [
+  { min: 2000, max: 2500, count: 2 },
+  { min: 2500, max: 3000, count: 3 },
+  { min: 3000, max: 3300, count: 1 },
+  { min: 3300, max: 3600, count: 2 },
+  { min: 3600, max: 3800, count: 2 },
+  { min: 3800, max: 4000, count: 2 }
+];
+// Od 4000 do 10000: po 2 munjevita oblaka na svakih 200 poena
+for (let s = 4000; s < 10000; s += 200) {
+  LIGHTNING_ZONES.push({ min: s, max: s + 200, count: 2 });
+}
+const LIGHTNING_LIFE_COST = 2;
+// Razvuci tačan broj munjevitih oblaka ravnomerno kroz svaki opseg
+let lightningThresholds = [];
+for (const z of LIGHTNING_ZONES) {
+  for (let i = 0; i < z.count; i++) {
+    lightningThresholds.push(z.min + i * (z.max - z.min) / z.count);
+  }
+}
+
+// --- Zeleni oblak isceljenja — vraća 3 života, pojavljuje se na svakih 500 poena (4000-10000) ---
+const GREEN_HEAL_AMOUNT = 3;
+let greenThresholds = [];
+for (let s = 4000; s <= 10000; s += 500) {
+  greenThresholds.push(s);
+}
+
+// --- Posle 10000 poena: nastavlja se isti obrazac unedogled ---
+// (2 bureta + 2 munjevita oblaka na svakih 200 poena, zeleni oblak isceljenja na svakih 500 poena)
+const STATIC_BARREL_THRESHOLD_COUNT = barrelThresholds.length;
+const STATIC_LIGHTNING_THRESHOLD_COUNT = lightningThresholds.length;
+const STATIC_GREEN_THRESHOLD_COUNT = greenThresholds.length;
+const STATIC_BARREL_ZONES_COUNT = BARREL_ZONES.length;
+const STATIC_LIGHTNING_ZONES_COUNT = LIGHTNING_ZONES.length;
+let obstacleZonesGeneratedUpTo = 10000;  // burad/munje pokriveni do ovoliko poena
+let greenZonesGeneratedUpTo = 10000;     // zeleni oblaci pokriveni do ovoliko poena
+const GENERATE_AHEAD = 1000; // koliko unapred da generišemo nove pragove
+
+function ensureObstaclesGenerated(scoreNow) {
+  while (obstacleZonesGeneratedUpTo < scoreNow + GENERATE_AHEAD) {
+    const s = obstacleZonesGeneratedUpTo;
+    BARREL_ZONES.push({ min: s, max: s + 200, count: 2 });
+    LIGHTNING_ZONES.push({ min: s, max: s + 200, count: 2 });
+    for (let i = 0; i < 2; i++) {
+      const t = s + i * 100;
+      barrelThresholds.push(t);
+      barrelZoneSpawned.push(false);
+      lightningThresholds.push(t);
+      lightningSpawned.push(false);
+    }
+    obstacleZonesGeneratedUpTo += 200;
+  }
+  while (greenZonesGeneratedUpTo < scoreNow + GENERATE_AHEAD) {
+    greenZonesGeneratedUpTo += 500;
+    greenThresholds.push(greenZonesGeneratedUpTo);
+    greenSpawned.push(false);
+  }
+}
+
+let keys = {};
+let jumpRequested = false;
+window.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if ((e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') && !e.repeat) {
+    jumpRequested = true;
+  }
+});
+window.addEventListener('keyup', e => { keys[e.key] = false; });
+
+// --- Kontrole za dodir (mobilni telefoni) ---
+// Ova verzija je isključivo za telefone — dodirne kontrole su uvek uključene
+const isTouchDevice = true;
+const touchControls = document.getElementById('touchControls');
+touchControls.classList.add('active');
+
+function bindHoldButton(el, onDown, onUp) {
+  const down = e => { e.preventDefault(); el.classList.add('pressed'); onDown(); };
+  const up = e => { e.preventDefault(); el.classList.remove('pressed'); if (onUp) onUp(); };
+  el.addEventListener('touchstart', down, { passive: false });
+  el.addEventListener('touchend', up, { passive: false });
+  el.addEventListener('touchcancel', up, { passive: false });
+  el.addEventListener('mousedown', down);
+  el.addEventListener('mouseup', up);
+  el.addEventListener('mouseleave', up);
+}
+
+bindHoldButton(document.getElementById('btnLeft'),
+  () => { keys['ArrowLeft'] = true; }, () => { keys['ArrowLeft'] = false; });
+bindHoldButton(document.getElementById('btnRight'),
+  () => { keys['ArrowRight'] = true; }, () => { keys['ArrowRight'] = false; });
+bindHoldButton(document.getElementById('btnJump'),
+  () => { jumpRequested = true; });
+
+if (isTouchDevice) {
+  document.querySelector('.hint').textContent = '🐦 Golden Bird — tap the buttons to move and jump • 🔊 top right for sound';
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  for (const c of clouds) {
+    if (c.x + CLOUD_W > W) c.x = Math.max(0, W - CLOUD_W);
+  }
+  if (bird.x + bird.width > W) bird.x = W - bird.width;
+});
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    resizeCanvas();
+    if (bird.x + bird.width > W) bird.x = W - bird.width;
+  }, 200);
+});
+
+class Bird {
+  constructor() { this.width = 34; this.height = 28; this.reset(); }
+  reset() {
+    this.x = W / 2 - this.width / 2;
+    this.y = H - 40 - this.height;
+    this.velY = 0;
+    this.velX = 0;
+    this.grounded = true;
+    this.standingCloud = null;
+    this.facing = 1;
+  }
+  update(clouds) {
+    this.velX = 0;
+    if (keys['ArrowLeft'] || keys['a'] || keys['A']) this.velX = -PLAYER_SPEED;
+    if (keys['ArrowRight'] || keys['d'] || keys['D']) this.velX = PLAYER_SPEED;
+    if (this.velX > 0) this.facing = 1;
+    else if (this.velX < 0) this.facing = -1;
+
+    // --- Horizontal kretanje: oblaci su čvrsti sa obe strane (osim dok ptica leti na gore kroz oblak) ---
+    this.x += this.velX;
+    if (this.velY >= 0) {
+      for (const c of clouds) {
+        if (this.collides(c)) {
+          if (this.velX > 0) this.x = c.x - this.width;      // zaustavi sa leve strane oblaka
+          else if (this.velX < 0) this.x = c.x + CLOUD_W;    // zaustavi sa desne strane oblaka
+        }
+      }
+    }
+    if (this.x < 0) this.x = 0;
+    else if (this.x + this.width > W) this.x = W - this.width;
+
+    // Ako je sišla sa ivice oblaka na kome je stajala, počni da pada
+    if (this.grounded && this.standingCloud) {
+      const stillOn = this.x < this.standingCloud.x + CLOUD_W && this.x + this.width > this.standingCloud.x;
+      if (!stillOn) { this.grounded = false; this.standingCloud = null; }
+    }
+
+    // --- Vertikalno kretanje ---
+    if (!this.grounded) {
+      this.velY += GRAVITY;
+      this.y += this.velY;
+
+      for (const c of clouds) {
+        if (!this.collides(c)) continue;
+        if (this.velY > 0 && this.y + this.height - this.velY <= c.y + 5) {
+          // sletanje na vrh oblaka
+          this.y = c.y - this.height;
+          this.velY = 0;
+          if (!this.grounded) Audio_.sfxLand();
+          this.grounded = true;
+          this.standingCloud = c;
+          if (c.isLightning) {
+            loseLives(LIGHTNING_LIFE_COST);
+          }
+          if (c.isHeal && !c.healed) {
+            c.healed = true;
+            gainLives(GREEN_HEAL_AMOUNT);
+          }
+        }
+        // Kad ptica skače na gore, prolazi kroz oblak ispod (nije čvrst odozdo)
+      }
+    }
+
+    // Skok se dešava SAMO na pritisak tastera — igra se ne igra sama
+    if (jumpRequested) {
+      if (this.grounded) {
+        this.velY = JUMP_STRENGTH;
+        this.grounded = false;
+        this.standingCloud = null;
+        Audio_.sfxJump();
+      }
+      jumpRequested = false;
+    }
+  }
+  collides(c) {
+    return this.x < c.x + CLOUD_W && this.x + this.width > c.x &&
+           this.y < c.y + CLOUD_H && this.y + this.height > c.y;
+  }
+  draw() {
+    const cx = this.x + this.width/2, cy = this.y + this.height/2;
+    const tilt = Math.max(-0.5, Math.min(0.6, this.velY * 0.045));
+
+    // senka ispod ptice — u svetskim koordinatama, bez rotacije/mirora
+    ctx.save();
+    ctx.fillStyle = 'rgba(90,60,20,0.15)';
+    ctx.beginPath();
+    ctx.ellipse(cx, this.y + this.height + 3, this.width/2.2, 5, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(tilt);
+    ctx.scale(this.facing, 1);
+
+    // telo — topli zlatni gradijent
+    const bodyGrad = ctx.createRadialGradient(-this.width*0.15, -this.height*0.2, 2, 0, 0, this.width*0.7);
+    bodyGrad.addColorStop(0, '#FFEFA0');
+    bodyGrad.addColorStop(0.5, '#FFD700');
+    bodyGrad.addColorStop(1, '#E8A400');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, this.width/2, this.height/2, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // krilo — mahanje zavisi od kretanja (brže gore, sporije u padu)
+    const flapSpeed = this.velY < 0 ? 0.9 : 0.35;
+    const flap = Math.sin(animTime * flapSpeed) * (this.velY < -2 ? 10 : 5);
+    ctx.fillStyle = '#F2A900';
+    ctx.beginPath();
+    ctx.ellipse(-4, 2 + flap * 0.15, (this.width-16)/2, (this.height-12)/2 + Math.abs(flap)*0.2, 0.15, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(180,110,0,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-this.width*0.28, 2);
+    ctx.lineTo(this.width*0.05, 2);
+    ctx.stroke();
+
+    // rep
+    ctx.fillStyle = '#E8A400';
+    ctx.beginPath();
+    ctx.moveTo(-this.width/2 + 2, -2);
+    ctx.lineTo(-this.width/2 - 9, -7);
+    ctx.lineTo(-this.width/2 - 9, 6);
+    ctx.closePath();
+    ctx.fill();
+
+    // kljun
+    ctx.fillStyle = '#FF6400';
+    ctx.beginPath();
+    ctx.moveTo(this.width/2 - 2, -4);
+    ctx.lineTo(this.width/2 + 9, 0);
+    ctx.lineTo(this.width/2 - 2, 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // oko
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(this.width/2 - 11, -4, 4, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#241a08';
+    ctx.beginPath();
+    ctx.arc(this.width/2 - 10, -4, 2.2, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
+class Cloud {
+  constructor(y) {
+    this.x = Math.random() * (W - CLOUD_W);
+    this.y = y;
+  }
+  draw() {
+    ctx.save();
+    // meka senka ispod oblaka
+    ctx.fillStyle = 'rgba(120, 140, 160, 0.18)';
+    ctx.beginPath();
+    ctx.ellipse(this.x + 26, this.y + 18, 24, 10, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 60, this.y + 12, 28, 11, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 96, this.y + 16, 22, 9, 0, 0, Math.PI*2);
+    ctx.fill();
+    // glavno telo oblaka
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.ellipse(this.x + 26, this.y + 15, 26, 15, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 60, this.y + 8, 30, 16, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 96, this.y + 13, 24, 13, 0, 0, Math.PI*2);
+    ctx.fill();
+    // gornji sjaj
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath();
+    ctx.ellipse(this.x + 55, this.y + 3, 20, 7, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// Munjeviti oblak — funkcioniše kao platforma, ali sletanje na njega košta života
+class LightningCloud extends Cloud {
+  constructor(y) {
+    super(y);
+    this.isLightning = true;
+  }
+  draw() {
+    ctx.save();
+    // meka senka
+    ctx.fillStyle = 'rgba(150, 120, 0, 0.25)';
+    ctx.beginPath();
+    ctx.ellipse(this.x + 26, this.y + 18, 24, 10, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 60, this.y + 12, 28, 11, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 96, this.y + 16, 22, 9, 0, 0, Math.PI*2);
+    ctx.fill();
+    // telo oblaka — jarko elektro-žuto, upozoravajuća boja
+    const grad = ctx.createLinearGradient(this.x, this.y, this.x, this.y + CLOUD_H + 10);
+    grad.addColorStop(0, '#FFF176');
+    grad.addColorStop(0.5, '#FFD500');
+    grad.addColorStop(1, '#FFA700');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(this.x + 26, this.y + 15, 26, 15, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 60, this.y + 8, 30, 16, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 96, this.y + 13, 24, 13, 0, 0, Math.PI*2);
+    ctx.fill();
+    // treperava aura upozorenja
+    const pulse = 0.5 + 0.5 * Math.sin(animTime * 0.25);
+    ctx.strokeStyle = `rgba(255, 140, 0, ${0.5 + 0.4 * pulse})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(this.x + 60, this.y + 11, 46, 21, 0, 0, Math.PI*2);
+    ctx.stroke();
+    // velika, jasna munja u sredini
+    ctx.fillStyle = '#5A3E00';
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    const bx = this.x + 52, by = this.y - 2;
+    ctx.moveTo(bx + 12, by);
+    ctx.lineTo(bx, by + 15);
+    ctx.lineTo(bx + 7, by + 15);
+    ctx.lineTo(bx - 4, by + 32);
+    ctx.lineTo(bx + 18, by + 13);
+    ctx.lineTo(bx + 9, by + 13);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// Zeleni oblak isceljenja — funkcioniše kao platforma, sletanje vraća 3 života (jednokratno)
+class GreenCloud extends Cloud {
+  constructor(y) {
+    super(y);
+    this.isHeal = true;
+    this.healed = false;
+  }
+  draw() {
+    ctx.save();
+    // meka senka
+    ctx.fillStyle = 'rgba(20, 110, 60, 0.2)';
+    ctx.beginPath();
+    ctx.ellipse(this.x + 26, this.y + 18, 24, 10, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 60, this.y + 12, 28, 11, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 96, this.y + 16, 22, 9, 0, 0, Math.PI*2);
+    ctx.fill();
+    // telo oblaka — sveže zeleno, ako je već iskorišćen postaje bledo/sivkasto
+    const grad = ctx.createLinearGradient(this.x, this.y, this.x, this.y + CLOUD_H + 10);
+    if (this.healed) {
+      grad.addColorStop(0, '#DDE7DD');
+      grad.addColorStop(1, '#AEBDAE');
+    } else {
+      grad.addColorStop(0, '#B6F2A0');
+      grad.addColorStop(0.5, '#6ED958');
+      grad.addColorStop(1, '#3FAE3F');
+    }
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(this.x + 26, this.y + 15, 26, 15, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 60, this.y + 8, 30, 16, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 96, this.y + 13, 24, 13, 0, 0, Math.PI*2);
+    ctx.fill();
+    if (!this.healed) {
+      // blagi sjaj upozorenja da je "dobro"
+      const pulse = 0.5 + 0.5 * Math.sin(animTime * 0.2);
+      ctx.strokeStyle = `rgba(160, 255, 140, ${0.4 + 0.4 * pulse})`;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.ellipse(this.x + 60, this.y + 11, 44, 20, 0, 0, Math.PI*2);
+      ctx.stroke();
+      // srce u sredini
+      ctx.fillStyle = '#FFFFFF';
+      const hx = this.x + 60, hy = this.y + 8;
+      ctx.beginPath();
+      ctx.moveTo(hx, hy + 8);
+      ctx.bezierCurveTo(hx - 14, hy - 4, hx - 6, hy - 14, hx, hy - 6);
+      ctx.bezierCurveTo(hx + 6, hy - 14, hx + 14, hy - 4, hx, hy + 8);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+class FlyingBarrel {
+  constructor(y) {
+    this.width = BARREL_W;
+    this.height = BARREL_H;
+    this.y = y;
+    // Krene sa nasumične strane ekrana, leti ka suprotnoj
+    const fromLeft = Math.random() < 0.5;
+    this.x = fromLeft ? -this.width : W;
+    this.velX = (BARREL_MIN_SPEED + Math.random() * (BARREL_MAX_SPEED - BARREL_MIN_SPEED)) * (fromLeft ? 1 : -1);
+  }
+  update() {
+    this.x += this.velX;
+    // Šatl kretanje: bure se odbija od ivica ekrana i putuje napred-nazad u svom koridoru
+    if (this.x <= 0) {
+      this.x = 0;
+      this.velX = Math.abs(this.velX);
+    } else if (this.x + this.width >= W) {
+      this.x = W - this.width;
+      this.velX = -Math.abs(this.velX);
+    }
+  }
+  draw() {
+    ctx.save();
+    const x = this.x, y = this.y, w = this.width, h = this.height;
+
+    // meka senka ispod bureta (osećaj da leti iznad oblaka)
+    ctx.fillStyle = 'rgba(90, 60, 30, 0.18)';
+    ctx.beginPath();
+    ctx.ellipse(x + w/2, y + h * 0.95, w * 0.42, h * 0.22, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // telo bureta — drveni gradijent
+    const wood = ctx.createLinearGradient(x, y, x + w, y);
+    wood.addColorStop(0, '#7A4325');
+    wood.addColorStop(0.15, '#A0522D');
+    wood.addColorStop(0.5, '#C1723F');
+    wood.addColorStop(0.85, '#A0522D');
+    wood.addColorStop(1, '#7A4325');
+    ctx.fillStyle = wood;
+    ctx.beginPath();
+    ctx.ellipse(x + w/2, y + h/2, w/2, h/2, 0, 0, Math.PI*2);
+    ctx.fill();
+    // metalni obruči
+    ctx.strokeStyle = '#5C3317';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(x + w * 0.28, y + h/2, w * 0.06, h/2 - 1, 0, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(x + w * 0.72, y + h/2, w * 0.06, h/2 - 1, 0, 0, Math.PI*2);
+    ctx.stroke();
+    // linija sredine (daske)
+    ctx.strokeStyle = '#7B4023';
+    ctx.lineWidth = 1.5;
+    for (let i = 1; i < 4; i++) {
+      const lx = x + (w / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(lx, y + 2);
+      ctx.lineTo(lx, y + h - 2);
+      ctx.stroke();
+    }
+    // sjaj odozgo
+    ctx.fillStyle = 'rgba(255, 235, 200, 0.35)';
+    ctx.beginPath();
+    ctx.ellipse(x + w/2, y + h * 0.22, w * 0.38, h * 0.14, 0, 0, Math.PI*2);
+    ctx.fill();
+    // oblačići traga leta iza bureta
+    const wingDir = this.velX > 0 ? -1 : 1;
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.beginPath();
+    ctx.ellipse(x + w/2 + wingDir * (w * 0.62), y + h * 0.55, w * 0.16, h * 0.11, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.beginPath();
+    ctx.ellipse(x + w/2 + wingDir * (w * 0.95), y + h * 0.5, w * 0.1, h * 0.08, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// Oblaci počinju blisko (lako se skače), pa se postepeno razmiču SKOKOVITO na svakih 1000 poena.
+// Maksimalni razmak je ograničen visinom skoka, tako da ptica UVEK može da doskoči.
+const EASY_GAP_MIN = 25, EASY_GAP_MAX = 40;
+const HARD_GAP_MIN = 60, HARD_GAP_MAX = 90; // dovoljno malo da uvek ostane vremena za bočni domašaj
+const DIFFICULTY_STEP = 1000;   // svakih ovoliko poena, nivo se malo otežava
+const MAX_DIFFICULTY_STEPS = 10; // posle 10000 poena dostignuta je puna (ali i dalje uvek pređiva) težina
+
+// Podeli širinu ekrana na trake i napravi po jedan oblak u svakoj,
+// tako da oblaci pokrivaju ceo ekran umesto da budu u jednoj uskoj koloni.
+function createCloudRow(y) {
+  const row = [];
+  const bandWidth = 650;
+  const numBands = Math.max(1, Math.round(W / bandWidth));
+  // Pomeraj čitav raspored traka nasumično po redu, da se oblaci ne poklapaju
+  // sa onima u redu ispod/iznad (da ne stoje jedan tačno iznad drugog).
+  const shift = (Math.random() - 0.5) * bandWidth;
+  for (let i = 0; i < numBands; i++) {
+    const bandStart = (W / numBands) * i;
+    const bandEnd = (W / numBands) * (i + 1);
+    let x = bandStart + Math.random() * Math.max(0, (bandEnd - bandStart) - CLOUD_W) + shift;
+    x = Math.max(0, Math.min(W - CLOUD_W, x));
+    const yOffset = (Math.random() - 0.5) * 20;
+    const c = new Cloud(y + yOffset);
+    c.x = x;
+    row.push(c);
+  }
+  return row;
+}
+
+function makeInitialClouds() {
+  let clouds = [];
+  const gap = (EASY_GAP_MIN + EASY_GAP_MAX) / 2;
+  const numRows = Math.ceil(H / gap) + 2;
+  for (let i = 0; i < numRows; i++) {
+    clouds = clouds.concat(createCloudRow(H - i * gap - 40));
+  }
+  // garantuj da postoji oblak tačno ispod ptice na startu
+  clouds.push(Object.assign(new Cloud(H - 40), { x: W / 2 - CLOUD_W / 2 }));
+  return clouds;
+}
+
+function spawnCloudAbove(clouds) {
+  const highest = Math.min(...clouds.map(c => c.y));
+  const step = Math.floor(score / DIFFICULTY_STEP);
+  const t = Math.min(step / MAX_DIFFICULTY_STEPS, 1);
+  const gapMin = EASY_GAP_MIN + t * (HARD_GAP_MIN - EASY_GAP_MIN);
+  const gapMax = EASY_GAP_MAX + t * (HARD_GAP_MAX - EASY_GAP_MAX);
+  const newY = highest - (gapMin + Math.random() * (gapMax - gapMin));
+  const row = createCloudRow(newY);
+  for (const c of row) clouds.push(c);
+}
+
+let bird = new Bird();
+let clouds = makeInitialClouds();
+let barrels = [];
+let barrelZoneSpawned = barrelThresholds.map(() => false);
+let lightningSpawned = lightningThresholds.map(() => false);
+let greenSpawned = greenThresholds.map(() => false);
+let score = 0;
+let lives = MAX_LIVES;
+let gameOver = false;
+let animTime = 0;
+
+// --- Pozadinski (daleki) oblaci — čisto dekorativni parallax sloj, sporo lebde levo-desno ---
+const NUM_BG_CLOUDS = 5;
+let bgClouds = [];
+function makeBgClouds() {
+  bgClouds = [];
+  for (let i = 0; i < NUM_BG_CLOUDS; i++) {
+    bgClouds.push({
+      x: Math.random() * W,
+      y: 40 + Math.random() * (H * 0.55),
+      scale: 0.6 + Math.random() * 0.9,
+      speed: 0.12 + Math.random() * 0.18
+    });
+  }
+}
+makeBgClouds();
+
+const hud = document.getElementById('hud');
+const livesHud = document.getElementById('livesHud');
+const overlay = document.getElementById('overlay');
+const finalScore = document.getElementById('finalScore');
+document.getElementById('restartBtn').addEventListener('click', restart);
+window.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') { if (gameOver) restart(); }
+});
+
+function updateLivesHud() {
+  livesHud.textContent = '❤️ Lives: ' + lives + '/' + MAX_LIVES;
+  livesHud.classList.remove('flash');
+  void livesHud.offsetWidth; // restartuj CSS animaciju
+  livesHud.classList.add('flash');
+}
+
+function triggerGameOver() {
+  if (gameOver) return;
+  gameOver = true;
+  Audio_.sfxHit();
+  Audio_.stopMusic();
+  finalScore.textContent = 'Score: ' + score;
+  overlay.style.display = 'flex';
+}
+
+function loseLives(n) {
+  if (gameOver) return;
+  lives = Math.max(0, lives - n);
+  updateLivesHud();
+  if (lives <= 0) {
+    triggerGameOver();
+  } else {
+    Audio_.sfxZap();
+  }
+}
+
+function gainLives(n) {
+  if (gameOver) return;
+  lives = Math.min(MAX_LIVES, lives + n);
+  updateLivesHud();
+  Audio_.sfxHeal();
+}
+
+function restart() {
+  bird = new Bird();
+  clouds = makeInitialClouds();
+  barrels = [];
+  barrelThresholds.length = STATIC_BARREL_THRESHOLD_COUNT;
+  lightningThresholds.length = STATIC_LIGHTNING_THRESHOLD_COUNT;
+  greenThresholds.length = STATIC_GREEN_THRESHOLD_COUNT;
+  BARREL_ZONES.length = STATIC_BARREL_ZONES_COUNT;
+  LIGHTNING_ZONES.length = STATIC_LIGHTNING_ZONES_COUNT;
+  obstacleZonesGeneratedUpTo = 10000;
+  greenZonesGeneratedUpTo = 10000;
+  barrelZoneSpawned = barrelThresholds.map(() => false);
+  lightningSpawned = lightningThresholds.map(() => false);
+  greenSpawned = greenThresholds.map(() => false);
+  score = 0;
+  lives = MAX_LIVES;
+  gameOver = false;
+  overlay.style.display = 'none';
+  updateLivesHud();
+  Audio_.sfxRestart();
+  Audio_.startMusic();
+}
+
+function birdHitsBarrel(b) {
+  return bird.x < b.x + b.width && bird.x + bird.width > b.x &&
+         bird.y < b.y + b.height && bird.y + bird.height > b.y;
+}
+
+function update() {
+  if (gameOver) return;
+  animTime++;
+
+  // Pomeri daleke pozadinske oblake (čisto dekorativno, nezavisno od bodova)
+  for (const bc of bgClouds) {
+    bc.x += bc.speed;
+    if (bc.x > W + 80) bc.x = -80;
+  }
+
+  bird.update(clouds);
+
+  // Pomeri leteća burad levo-desno u njihovom šatl-koridoru
+  for (const b of barrels) {
+    b.update();
+  }
+
+  if (bird.y < H / 2) {
+    const scroll = H / 2 - bird.y;
+    bird.y = H / 2;
+    for (const c of clouds) c.y += scroll;
+    for (const b of barrels) b.y += scroll;
+    score += Math.floor(scroll);
+  }
+
+  // Tačan broj bureta u svakom definisanom opsegu poena
+  ensureObstaclesGenerated(score);
+  for (let i = 0; i < barrelThresholds.length; i++) {
+    if (!barrelZoneSpawned[i] && score >= barrelThresholds[i]) {
+      barrelZoneSpawned[i] = true;
+      const highest = Math.min(...clouds.map(c => c.y));
+      barrels.push(new FlyingBarrel(highest - 70));
+    }
+  }
+
+  // Munjeviti oblaci — tačan broj po opsegu (2 između 2000-2500, 3 između 2500-3000)
+  for (let i = 0; i < lightningThresholds.length; i++) {
+    if (!lightningSpawned[i] && score >= lightningThresholds[i]) {
+      lightningSpawned[i] = true;
+      const highest = Math.min(...clouds.map(c => c.y));
+      const lc = new LightningCloud(highest - 45);
+      lc.x = Math.random() * (W - CLOUD_W);
+      clouds.push(lc);
+    }
+  }
+
+  // Zeleni oblak isceljenja — na svakih 500 poena (4000-10000), vraća 3 života
+  for (let i = 0; i < greenThresholds.length; i++) {
+    if (!greenSpawned[i] && score >= greenThresholds[i]) {
+      greenSpawned[i] = true;
+      const highest = Math.min(...clouds.map(c => c.y));
+      const gc = new GreenCloud(highest - 45);
+      gc.x = Math.random() * (W - CLOUD_W);
+      clouds.push(gc);
+    }
+  }
+
+  clouds = clouds.filter(c => c.y < H + 40);
+  barrels = barrels.filter(b => b.y < H + 40);
+  if (clouds.length === 0) {
+    for (const c of createCloudRow(H - 40)) clouds.push(c);
+  }
+  // Dopunjuj dok postoji dovoljno oblaka IZNAD vidljivog ekrana (ne samo fiksan broj),
+  // tako da gustina ostane ista tokom cele igre, ne samo na početku.
+  while (Math.min(...clouds.map(c => c.y)) > -150) {
+    spawnCloudAbove(clouds);
+  }
+
+  // Sudar sa letećim buretom — gubi se svih 10 života (trenutni kraj igre)
+  for (const b of barrels) {
+    if (birdHitsBarrel(b)) {
+      loseLives(MAX_LIVES);
+      break;
+    }
+  }
+
+  if (bird.y > H && !gameOver) {
+    loseLives(MAX_LIVES);
+  }
+
+  hud.textContent = 'Score: ' + score;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#7EC8EA');
+  grad.addColorStop(0.55, '#A9DDF3');
+  grad.addColorStop(1, '#E8F6FF');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Sunce — topao sjaj u gornjem uglu
+  const sunX = W * 0.82, sunY = H * 0.12, sunR = Math.min(W, H) * 0.14;
+  const sunGlow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, sunR * 2.2);
+  sunGlow.addColorStop(0, 'rgba(255, 246, 214, 0.9)');
+  sunGlow.addColorStop(0.35, 'rgba(255, 236, 170, 0.45)');
+  sunGlow.addColorStop(1, 'rgba(255, 236, 170, 0)');
+  ctx.fillStyle = sunGlow;
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, sunR * 2.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#FFF6D6';
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, sunR * 0.55, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Daleki oblaci — parallax, bledi, mekši
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  for (const bc of bgClouds) {
+    const s = bc.scale;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.ellipse(bc.x, bc.y, 28 * s, 14 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(bc.x + 26 * s, bc.y - 6 * s, 22 * s, 12 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(bc.x - 24 * s, bc.y + 2 * s, 20 * s, 11 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  for (const c of clouds) c.draw();
+  for (const b of barrels) b.draw();
+  bird.draw();
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+livesHud.textContent = '❤️ Lives: ' + lives + '/' + MAX_LIVES;
+loop();
+</script>
+</body>
+</html>
