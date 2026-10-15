@@ -469,7 +469,7 @@ for (const z of BARREL_ZONES) {
 }
 
 // --- Životi ---
-const MAX_LIVES = 10;
+const START_LIVES = 10;   // igra počinje sa 10 života, a može ih biti i više (nema gornje granice)
 
 // --- Munjeviti oblaci (opasne platforme) — koštaju 2 života kad sletiš na njih ---
 const LIGHTNING_ZONES = [
@@ -493,10 +493,10 @@ for (const z of LIGHTNING_ZONES) {
   }
 }
 
-// --- Zeleni oblak isceljenja — vraća 3 života, pojavljuje se na svakih 500 poena (4000-10000) ---
+// --- Zeleni oblak isceljenja — vraća 3 života, pojavljuje se na svakih 500 poena (od 2000) ---
 const GREEN_HEAL_AMOUNT = 3;
 let greenThresholds = [];
-for (let s = 4000; s <= 10000; s += 500) {
+for (let s = 2000; s <= 10000; s += 500) {
   greenThresholds.push(s);
 }
 
@@ -663,73 +663,184 @@ class Bird {
            this.y < c.y + CLOUD_H && this.y + this.height > c.y;
   }
   draw() {
-    const cx = this.x + this.width/2, cy = this.y + this.height/2;
-    const tilt = Math.max(-0.5, Math.min(0.6, this.velY * 0.045));
+    const w = this.width, h = this.height;
+    const cx = this.x + w/2, cy = this.y + h/2;
+    const tilt = Math.max(-0.45, Math.min(0.5, this.velY * 0.04));
+    const airborne = !this.grounded;
+    // treptanje: kratko zatvori oči na svakih ~3.5 sekundi
+    const blinking = (animTime % 210) < 7;
+    // mahanje krilom: brzo pri skoku, lagano lebdenje u padu, mirno kad stoji
+    const flapPhase = airborne ? animTime * (this.velY < 0 ? 0.75 : 0.3) : animTime * 0.08;
+    const flap = Math.sin(flapPhase);
+    // blago "disanje" kad stoji (malo se spljošti/izduži)
+    const squash = airborne ? 0 : Math.sin(animTime * 0.08) * 0.04;
 
-    // senka ispod ptice — u svetskim koordinatama, bez rotacije/mirora
+    // senka ispod ptice
     ctx.save();
-    ctx.fillStyle = 'rgba(90,60,20,0.15)';
+    ctx.fillStyle = 'rgba(70,50,20,0.16)';
     ctx.beginPath();
-    ctx.ellipse(cx, this.y + this.height + 3, this.width/2.2, 5, 0, 0, Math.PI*2);
+    ctx.ellipse(cx, this.y + h + 3, w/2.3, 4.5, 0, 0, Math.PI*2);
     ctx.fill();
     ctx.restore();
 
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(tilt);
-    ctx.scale(this.facing, 1);
+    ctx.scale(this.facing * (1 + squash), 1 - squash);
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    const OUTLINE = '#8A5300';
 
-    // telo — topli zlatni gradijent
-    const bodyGrad = ctx.createRadialGradient(-this.width*0.15, -this.height*0.2, 2, 0, 0, this.width*0.7);
-    bodyGrad.addColorStop(0, '#FFEFA0');
-    bodyGrad.addColorStop(0.5, '#FFD700');
-    bodyGrad.addColorStop(1, '#E8A400');
+    // nožice (samo kad stoji)
+    if (!airborne) {
+      ctx.strokeStyle = '#E2771B';
+      ctx.lineWidth = 2;
+      for (const fx of [-4, 4]) {
+        ctx.beginPath();
+        ctx.moveTo(fx, h/2 - 3);
+        ctx.lineTo(fx, h/2 + 2);
+        ctx.moveTo(fx - 2.5, h/2 + 2);
+        ctx.lineTo(fx + 3, h/2 + 2);
+        ctx.stroke();
+      }
+    }
+
+    // rep — lepeza od tri pera
+    const tailWag = Math.sin(animTime * 0.15) * 0.08;
+    const tailColors = ['#E39400', '#F5B000', '#E39400'];
+    [-0.45, 0, 0.45].forEach((a, i) => {
+      ctx.save();
+      ctx.translate(-w/2 + 3, 1);
+      ctx.rotate(Math.PI + a * 0.6 + tailWag);
+      ctx.fillStyle = tailColors[i];
+      ctx.strokeStyle = OUTLINE;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.ellipse(6, 0, 7, 2.8, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // telo — okruglo, sa toplim zlatnim gradijentom
+    const bodyGrad = ctx.createRadialGradient(-w*0.12, -h*0.25, 2, 0, 0, w*0.62);
+    bodyGrad.addColorStop(0, '#FFF3B0');
+    bodyGrad.addColorStop(0.45, '#FFD23F');
+    bodyGrad.addColorStop(1, '#F0A202');
     ctx.fillStyle = bodyGrad;
+    ctx.strokeStyle = OUTLINE;
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
-    ctx.ellipse(0, 0, this.width/2, this.height/2, 0, 0, Math.PI*2);
+    ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI*2);
     ctx.fill();
-
-    // krilo — mahanje zavisi od kretanja (brže gore, sporije u padu)
-    const flapSpeed = this.velY < 0 ? 0.9 : 0.35;
-    const flap = Math.sin(animTime * flapSpeed) * (this.velY < -2 ? 10 : 5);
-    ctx.fillStyle = '#F2A900';
-    ctx.beginPath();
-    ctx.ellipse(-4, 2 + flap * 0.15, (this.width-16)/2, (this.height-12)/2 + Math.abs(flap)*0.2, 0.15, 0, Math.PI*2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(180,110,0,0.5)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(-this.width*0.28, 2);
-    ctx.lineTo(this.width*0.05, 2);
     ctx.stroke();
 
-    // rep
-    ctx.fillStyle = '#E8A400';
+    // svetliji stomačić
+    ctx.fillStyle = 'rgba(255, 248, 215, 0.9)';
     ctx.beginPath();
-    ctx.moveTo(-this.width/2 + 2, -2);
-    ctx.lineTo(-this.width/2 - 9, -7);
-    ctx.lineTo(-this.width/2 - 9, 6);
-    ctx.closePath();
+    ctx.ellipse(3, h*0.2, w*0.27, h*0.24, 0, 0, Math.PI*2);
     ctx.fill();
 
-    // kljun
-    ctx.fillStyle = '#FF6400';
+    // perjanica na glavi — tri zakrivljena pera
+    ctx.fillStyle = '#F5B000';
+    ctx.strokeStyle = OUTLINE;
+    ctx.lineWidth = 1.2;
+    [[3, -0.5, 8], [6, -0.15, 9.5], [9, 0.25, 7]].forEach(([px, ang, len]) => {
+      ctx.save();
+      ctx.translate(px, -h/2 + 2);
+      ctx.rotate(ang + Math.sin(animTime * 0.12 + px) * 0.06);
+      ctx.beginPath();
+      ctx.moveTo(-2, 0);
+      ctx.quadraticCurveTo(-3, -len * 0.7, 1, -len);
+      ctx.quadraticCurveTo(2.5, -len * 0.5, 2, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // kljun — dva dela, malo otvoren dok leti na gore
+    const beakOpen = this.velY < -4 ? 2 : 0;
+    const bx = w/2 - 3;
+    ctx.fillStyle = '#FF8A1F';
+    ctx.strokeStyle = '#B4520A';
+    ctx.lineWidth = 1.1;
     ctx.beginPath();
-    ctx.moveTo(this.width/2 - 2, -4);
-    ctx.lineTo(this.width/2 + 9, 0);
-    ctx.lineTo(this.width/2 - 2, 4);
+    ctx.moveTo(bx, -5);
+    ctx.quadraticCurveTo(bx + 8, -4, bx + 11, -1 - beakOpen * 0.3);
+    ctx.lineTo(bx, -0.5);
     ctx.closePath();
     ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#F06A0A';
+    ctx.beginPath();
+    ctx.moveTo(bx, 0 + beakOpen * 0.2);
+    ctx.lineTo(bx + 9, 0.5 + beakOpen);
+    ctx.quadraticCurveTo(bx + 4, 3.5 + beakOpen, bx, 3.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
 
-    // oko
-    ctx.fillStyle = '#FFFFFF';
+    // rumeni obraz
+    ctx.fillStyle = 'rgba(255, 120, 90, 0.45)';
     ctx.beginPath();
-    ctx.arc(this.width/2 - 11, -4, 4, 0, Math.PI*2);
+    ctx.ellipse(w/2 - 9, 3.5, 3.6, 2.4, 0, 0, Math.PI*2);
     ctx.fill();
-    ctx.fillStyle = '#241a08';
+
+    // oko — veliko, sa odsjajem; trepće
+    const ex = w/2 - 10, ey = -4.5;
+    if (blinking) {
+      ctx.strokeStyle = '#3A2606';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(ex, ey, 3.6, 0.15 * Math.PI, 0.85 * Math.PI);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = OUTLINE;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, 4.6, 5.2, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+      // zenica gleda malo gore dok leti na gore, dole dok pada
+      const look = Math.max(-1.2, Math.min(1.2, this.velY * 0.12));
+      ctx.fillStyle = '#2B1B05';
+      ctx.beginPath();
+      ctx.ellipse(ex + 1.3, ey + look, 2.7, 3.2, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(ex + 2.3, ey - 1.4 + look, 1.1, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    // krilo — pera u obliku kapljice, rotira se gore-dole dok maše
+    ctx.save();
+    ctx.translate(-3, 1);
+    ctx.rotate(-0.25 + flap * (airborne ? 0.7 : 0.08));
+    const wingGrad = ctx.createLinearGradient(0, -6, 0, 8);
+    wingGrad.addColorStop(0, '#FFC21A');
+    wingGrad.addColorStop(1, '#E08A00');
+    ctx.fillStyle = wingGrad;
+    ctx.strokeStyle = OUTLINE;
+    ctx.lineWidth = 1.3;
     ctx.beginPath();
-    ctx.arc(this.width/2 - 10, -4, 2.2, 0, Math.PI*2);
+    ctx.moveTo(4, -2);
+    ctx.quadraticCurveTo(2, -8, -8, -5);
+    ctx.quadraticCurveTo(-14, -1, -11, 5);
+    ctx.quadraticCurveTo(-4, 8, 4, 3);
+    ctx.closePath();
     ctx.fill();
+    ctx.stroke();
+    // linije pera na krilu
+    ctx.strokeStyle = 'rgba(138, 83, 0, 0.55)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(1, 0);   ctx.lineTo(-9, -2);
+    ctx.moveTo(1, 2);   ctx.lineTo(-9, 3);
+    ctx.stroke();
+    ctx.restore();
 
     ctx.restore();
   }
@@ -871,6 +982,72 @@ class GreenCloud extends Cloud {
   }
 }
 
+// Plavi pokretni oblak — od 500 poena, klizi levo-desno i nosi pticu sa sobom
+const MOVING_SCORE_START = 500;
+const MOVING_CHANCE = 0.3;            // deo novih oblaka koji su plavi i pokretni
+const MOVING_MIN_SPEED = 0.8, MOVING_MAX_SPEED = 2.0;
+class MovingCloud extends Cloud {
+  constructor(y) {
+    super(y);
+    this.isMoving = true;
+    this.vx = (MOVING_MIN_SPEED + Math.random() * (MOVING_MAX_SPEED - MOVING_MIN_SPEED)) * (Math.random() < 0.5 ? -1 : 1);
+  }
+  // Pomeri oblak; okreće se na ivici ekrana ili kad bi naleteo na drugi oblak. Vraća pomeraj.
+  move(all) {
+    const nx = this.x + this.vx;
+    let blocked = nx < 0 || nx + CLOUD_W > W;
+    if (!blocked) {
+      for (const c of all) {
+        if (c === this || Math.abs(c.y - this.y) >= CLOUD_VERT_CLEAR - 1) continue;
+        const overlapX = Math.min(nx + CLOUD_W, c.x + CLOUD_W) - Math.max(nx, c.x) + CLOUD_SIDE_GAP;
+        const wasOverlap = Math.min(this.x + CLOUD_W, c.x + CLOUD_W) - Math.max(this.x, c.x) + CLOUD_SIDE_GAP;
+        if (overlapX > 0 && overlapX > wasOverlap) { blocked = true; break; }
+      }
+    }
+    if (blocked) { this.vx = -this.vx; return 0; }
+    this.x = nx;
+    return this.vx;
+  }
+  draw() {
+    ctx.save();
+    ctx.fillStyle = 'rgba(30, 70, 140, 0.2)';
+    ctx.beginPath();
+    ctx.ellipse(this.x + 26, this.y + 18, 24, 10, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 60, this.y + 12, 28, 11, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 96, this.y + 16, 22, 9, 0, 0, Math.PI*2);
+    ctx.fill();
+    const grad = ctx.createLinearGradient(this.x, this.y, this.x, this.y + CLOUD_H + 10);
+    grad.addColorStop(0, '#BFE0FF');
+    grad.addColorStop(0.5, '#6FAEF2');
+    grad.addColorStop(1, '#3E7FD6');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(this.x + 26, this.y + 15, 26, 15, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 60, this.y + 8, 30, 16, 0, 0, Math.PI*2);
+    ctx.ellipse(this.x + 96, this.y + 13, 24, 13, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.beginPath();
+    ctx.ellipse(this.x + 55, this.y + 3, 20, 7, 0, 0, Math.PI*2);
+    ctx.fill();
+    // strelice koje pokazuju smer kretanja
+    const dir = this.vx > 0 ? 1 : -1;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (let k = 0; k < 2; k++) {
+      const ax = this.x + 60 + dir * (k * 9 - 4), ay = this.y + 11;
+      ctx.beginPath();
+      ctx.moveTo(ax - dir * 5, ay - 6);
+      ctx.lineTo(ax + dir * 2, ay);
+      ctx.lineTo(ax - dir * 5, ay + 6);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
 class FlyingBarrel {
   constructor(y) {
     this.width = BARREL_W;
@@ -958,22 +1135,92 @@ const HARD_GAP_MIN = 60, HARD_GAP_MAX = 90; // dovoljno malo da uvek ostane vrem
 const DIFFICULTY_STEP = 1000;   // svakih ovoliko poena, nivo se malo otežava
 const MAX_DIFFICULTY_STEPS = 10; // posle 10000 poena dostignuta je puna (ali i dalje uvek pređiva) težina
 
-// Podeli širinu ekrana na trake i napravi po jedan oblak u svakoj,
-// tako da oblaci pokrivaju ceo ekran umesto da budu u jednoj uskoj koloni.
-function createCloudRow(y) {
+// --- Razmak između oblaka: nijedan oblak ne sme da stoji na drugom / da se preklapa ---
+const CLOUD_VERT_CLEAR = 50;   // oblaci bliži od ovoga po visini moraju biti razmaknuti bočno
+const CLOUD_SIDE_GAP = 16;     // minimalni bočni razmak između takvih oblaka
+
+// Koliko se novi oblak na (x, y) "sudara" sa postojećim (0 = slobodno mesto)
+function cloudOverlapScore(x, y, existing) {
+  let worst = 0;
+  for (const c of existing) {
+    const dy = Math.abs(c.y - y);
+    if (dy >= CLOUD_VERT_CLEAR) continue;
+    if (c.isMoving) { worst = Math.max(worst, (W + CLOUD_SIDE_GAP) * (CLOUD_VERT_CLEAR - dy)); continue; }
+    const overlapX = Math.min(x + CLOUD_W, c.x + CLOUD_W) - Math.max(x, c.x) + CLOUD_SIDE_GAP;
+    if (overlapX > 0) worst = Math.max(worst, overlapX * (CLOUD_VERT_CLEAR - dy));
+  }
+  return worst;
+}
+
+// Nađi x poziciju za oblak na visini y koja ne pada na/ispod drugog oblaka
+function findFreeCloudX(y, existing) {
+  const maxX = Math.max(0, W - CLOUD_W);
+  let bestX = Math.random() * maxX, bestScore = Infinity;
+  for (let i = 0; i < 30; i++) {
+    const x = Math.random() * maxX;
+    const sc = cloudOverlapScore(x, y, existing);
+    if (sc === 0) return x;
+    if (sc < bestScore) { bestScore = sc; bestX = x; }
+  }
+  return bestX;
+}
+
+// Plavi oblak ima svoju "traku" preko cele širine ekrana — nijedan drugi oblak ni bure ne sme u nju.
+// Bure i oblak se sudaraju u traci ako su im visine preblizu.
+function barrelLaneClash(barrelY, cloudY) {
+  return barrelY > cloudY - 55 && barrelY < cloudY + 45;
+}
+// Podigni y iznad svakog plavog oblaka čija je traka preblizu
+function yClearOfMoving(y, others) {
+  let moved = true;
+  while (moved) {
+    moved = false;
+    for (const m of others) {
+      if (m.isMoving && Math.abs(m.y - y) < CLOUD_VERT_CLEAR) { y = m.y - CLOUD_VERT_CLEAR - 2; moved = true; }
+    }
+  }
+  return y;
+}
+// Podigni y iznad svakog oblaka u blizini (za plavi oblak — traka mu mora biti potpuno prazna)
+function yClearOfAll(y, others) {
+  let moved = true;
+  while (moved) {
+    moved = false;
+    for (const c of others) {
+      if (Math.abs(c.y - y) < CLOUD_VERT_CLEAR) { y = c.y - CLOUD_VERT_CLEAR - 2; moved = true; }
+    }
+  }
+  return y;
+}
+
+// Napravi red oblaka (na širim ekranima više njih), svaki na slobodnom mestu
+function createCloudRow(y, existing) {
+  existing = existing || [];
   const row = [];
-  const bandWidth = 650;
-  const numBands = Math.max(1, Math.round(W / bandWidth));
-  // Pomeraj čitav raspored traka nasumično po redu, da se oblaci ne poklapaju
-  // sa onima u redu ispod/iznad (da ne stoje jedan tačno iznad drugog).
-  const shift = (Math.random() - 0.5) * bandWidth;
+  const numBands = Math.max(1, Math.round(W / 650));
   for (let i = 0; i < numBands; i++) {
-    const bandStart = (W / numBands) * i;
-    const bandEnd = (W / numBands) * (i + 1);
-    let x = bandStart + Math.random() * Math.max(0, (bandEnd - bandStart) - CLOUD_W) + shift;
-    x = Math.max(0, Math.min(W - CLOUD_W, x));
-    const yOffset = (Math.random() - 0.5) * 20;
-    const c = new Cloud(y + yOffset);
+    const others = existing.concat(row);
+    let cy = y + (Math.random() - 0.5) * 20;
+
+    if (score >= MOVING_SCORE_START && Math.random() < MOVING_CHANCE) {
+      // plavi oblak: prazna traka preko cele širine, i bez bureta u toj traci
+      const my = yClearOfAll(cy, others);
+      if (!barrels.some(b => barrelLaneClash(b.y, my))) {
+        const m = new MovingCloud(my);
+        m.x = Math.random() * Math.max(0, W - CLOUD_W);
+        row.push(m);
+        continue;
+      }
+    }
+
+    cy = yClearOfMoving(cy, others);
+    let x = findFreeCloudX(cy, others);
+    // ako baš nema slobodnog mesta, podigni oblak malo više dok ga ne nađe
+    for (let k = 0; k < 4 && cloudOverlapScore(x, cy, others) > 0; k++) {
+      cy = yClearOfMoving(cy - 12, others);
+      x = findFreeCloudX(cy, others);
+    }
+    const c = new Cloud(cy);
     c.x = x;
     row.push(c);
   }
@@ -981,14 +1228,13 @@ function createCloudRow(y) {
 }
 
 function makeInitialClouds() {
-  let clouds = [];
+  // startni oblak tačno ispod ptice — ostali se raspoređuju oko njega
+  let clouds = [Object.assign(new Cloud(H - 40), { x: W / 2 - CLOUD_W / 2 })];
   const gap = (EASY_GAP_MIN + EASY_GAP_MAX) / 2;
   const numRows = Math.ceil(H / gap) + 2;
-  for (let i = 0; i < numRows; i++) {
-    clouds = clouds.concat(createCloudRow(H - i * gap - 40));
+  for (let i = 1; i < numRows; i++) {
+    clouds = clouds.concat(createCloudRow(H - i * gap - 40, clouds));
   }
-  // garantuj da postoji oblak tačno ispod ptice na startu
-  clouds.push(Object.assign(new Cloud(H - 40), { x: W / 2 - CLOUD_W / 2 }));
   return clouds;
 }
 
@@ -999,18 +1245,18 @@ function spawnCloudAbove(clouds) {
   const gapMin = EASY_GAP_MIN + t * (HARD_GAP_MIN - EASY_GAP_MIN);
   const gapMax = EASY_GAP_MAX + t * (HARD_GAP_MAX - EASY_GAP_MAX);
   const newY = highest - (gapMin + Math.random() * (gapMax - gapMin));
-  const row = createCloudRow(newY);
+  const row = createCloudRow(newY, clouds);
   for (const c of row) clouds.push(c);
 }
 
+let score = 0;
 let bird = new Bird();
-let clouds = makeInitialClouds();
 let barrels = [];
+let clouds = makeInitialClouds();
 let barrelZoneSpawned = barrelThresholds.map(() => false);
 let lightningSpawned = lightningThresholds.map(() => false);
 let greenSpawned = greenThresholds.map(() => false);
-let score = 0;
-let lives = MAX_LIVES;
+let lives = START_LIVES;
 let gameOver = false;
 let animTime = 0;
 
@@ -1040,7 +1286,7 @@ window.addEventListener('keydown', e => {
 });
 
 function updateLivesHud() {
-  livesHud.textContent = '❤️ Lives: ' + lives + '/' + MAX_LIVES;
+  livesHud.textContent = '❤️ Lives: ' + lives;
   livesHud.classList.remove('flash');
   void livesHud.offsetWidth; // restartuj CSS animaciju
   livesHud.classList.add('flash');
@@ -1068,15 +1314,16 @@ function loseLives(n) {
 
 function gainLives(n) {
   if (gameOver) return;
-  lives = Math.min(MAX_LIVES, lives + n);
+  lives = lives + n;
   updateLivesHud();
   Audio_.sfxHeal();
 }
 
 function restart() {
+  score = 0;      // poeni se resetuju PRE pravljenja oblaka, da ne bi odmah bilo plavih
+  barrels = [];
   bird = new Bird();
   clouds = makeInitialClouds();
-  barrels = [];
   barrelThresholds.length = STATIC_BARREL_THRESHOLD_COUNT;
   lightningThresholds.length = STATIC_LIGHTNING_THRESHOLD_COUNT;
   greenThresholds.length = STATIC_GREEN_THRESHOLD_COUNT;
@@ -1088,7 +1335,7 @@ function restart() {
   lightningSpawned = lightningThresholds.map(() => false);
   greenSpawned = greenThresholds.map(() => false);
   score = 0;
-  lives = MAX_LIVES;
+  lives = START_LIVES;
   gameOver = false;
   overlay.style.display = 'none';
   updateLivesHud();
@@ -1109,6 +1356,15 @@ function update() {
   for (const bc of bgClouds) {
     bc.x += bc.speed;
     if (bc.x > W + 80) bc.x = -80;
+  }
+
+  // Plavi oblaci klize levo-desno; ptica koja stoji na njemu putuje sa njim
+  for (const c of clouds) {
+    if (!c.isMoving) continue;
+    const dx = c.move(clouds);
+    if (dx && bird.grounded && bird.standingCloud === c) {
+      bird.x = Math.max(0, Math.min(W - bird.width, bird.x + dx));
+    }
   }
 
   bird.update(clouds);
@@ -1132,7 +1388,15 @@ function update() {
     if (!barrelZoneSpawned[i] && score >= barrelThresholds[i]) {
       barrelZoneSpawned[i] = true;
       const highest = Math.min(...clouds.map(c => c.y));
-      barrels.push(new FlyingBarrel(highest - 70));
+      let by = highest - 70;
+      // bure ne sme da leti u traci plavog oblaka
+      for (let moved = true; moved; ) {
+        moved = false;
+        for (const m of clouds) {
+          if (m.isMoving && barrelLaneClash(by, m.y)) { by = m.y - 60; moved = true; }
+        }
+      }
+      barrels.push(new FlyingBarrel(by));
     }
   }
 
@@ -1141,19 +1405,19 @@ function update() {
     if (!lightningSpawned[i] && score >= lightningThresholds[i]) {
       lightningSpawned[i] = true;
       const highest = Math.min(...clouds.map(c => c.y));
-      const lc = new LightningCloud(highest - 45);
-      lc.x = Math.random() * (W - CLOUD_W);
+      const lc = new LightningCloud(yClearOfMoving(highest - 45, clouds));
+      lc.x = findFreeCloudX(lc.y, clouds);
       clouds.push(lc);
     }
   }
 
-  // Zeleni oblak isceljenja — na svakih 500 poena (4000-10000), vraća 3 života
+  // Zeleni oblak isceljenja — na svakih 500 poena (od 2000), vraća 3 života
   for (let i = 0; i < greenThresholds.length; i++) {
     if (!greenSpawned[i] && score >= greenThresholds[i]) {
       greenSpawned[i] = true;
       const highest = Math.min(...clouds.map(c => c.y));
-      const gc = new GreenCloud(highest - 45);
-      gc.x = Math.random() * (W - CLOUD_W);
+      const gc = new GreenCloud(yClearOfMoving(highest - 45, clouds));
+      gc.x = findFreeCloudX(gc.y, clouds);
       clouds.push(gc);
     }
   }
@@ -1161,7 +1425,7 @@ function update() {
   clouds = clouds.filter(c => c.y < H + 40);
   barrels = barrels.filter(b => b.y < H + 40);
   if (clouds.length === 0) {
-    for (const c of createCloudRow(H - 40)) clouds.push(c);
+    for (const c of createCloudRow(H - 40, clouds)) clouds.push(c);
   }
   // Dopunjuj dok postoji dovoljno oblaka IZNAD vidljivog ekrana (ne samo fiksan broj),
   // tako da gustina ostane ista tokom cele igre, ne samo na početku.
@@ -1172,13 +1436,13 @@ function update() {
   // Sudar sa letećim buretom — gubi se svih 10 života (trenutni kraj igre)
   for (const b of barrels) {
     if (birdHitsBarrel(b)) {
-      loseLives(MAX_LIVES);
+      loseLives(lives);   // bure = kraj igre, bez obzira na broj života
       break;
     }
   }
 
   if (bird.y > H && !gameOver) {
-    loseLives(MAX_LIVES);
+    loseLives(lives);     // pad = kraj igre
   }
 
   hud.textContent = 'Score: ' + score;
@@ -1233,7 +1497,7 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-livesHud.textContent = '❤️ Lives: ' + lives + '/' + MAX_LIVES;
+livesHud.textContent = '❤️ Lives: ' + lives;
 loop();
 </script>
 </body>
